@@ -1,3 +1,15 @@
 [workspace]
 kind = "custom-content"
 id = "ghf-studios.vapor-examples"
+
+[[content]]
+kind = "engine"
+id = "ghf-studios.examples.basic-engine"
+
+[[content]]
+kind = "game"
+id = "ghf-studios.examples.basic-game"
+
+[[content]]
+kind = "packagepack"
+id = "ghf-studios.examples.basic-packagepack"

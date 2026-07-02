@@ -1,7 +1,13 @@
+# MANAGED BY VAPOR. EDIT Vapor.toml, THEN RUN `vapor-sdk workspace sync`.
 [workspace]
 resolver = "3"
-members = ["crates/workspace_anchor"]
+members = [
+    "crates/ghf_studios_examples_basic_engine",
+    "crates/ghf_studios_examples_basic_game",
+    "crates/ghf_studios_examples_basic_packagepack"
+]
 
 [workspace.package]
 version = "0.5.0"
 edition = "2024"
+# END MANAGED BY VAPOR.

@@ -3,5 +3,13 @@
 version = 4
 
 [[package]]
-name = "vapor_workspace_anchor"
+name = "ghf_studios_examples_basic_engine"
+version = "0.5.0"
+
+[[package]]
+name = "ghf_studios_examples_basic_game"
+version = "0.5.0"
+
+[[package]]
+name = "ghf_studios_examples_basic_packagepack"
 version = "0.5.0"

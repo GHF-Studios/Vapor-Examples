@@ -1,0 +1,4 @@
+# MANAGED BY VAPOR. EDIT Vapor.toml, THEN RUN `vapor-sdk workspace sync`.
+[engine]
+id = "ghf-studios.examples.basic-engine"
+# END MANAGED BY VAPOR.
