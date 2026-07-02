@@ -1,6 +1,6 @@
-// MANAGED BY VAPOR. EDIT Vapor.toml, THEN RUN `vapor-sdk workspace sync`.
+// SEEDED BY VAPOR. THIS FILE IS USER-OWNED AFTER CREATION.
 #![forbid(unsafe_code)]
 
 pub const CONTENT_KIND: &str = "game";
 pub const CONTENT_ID: &str = "ghf-studios.examples.basic-game";
-// END MANAGED BY VAPOR.
+// END VAPOR SEED.
