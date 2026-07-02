@@ -1,0 +1,4 @@
+[package]
+name = "vapor_workspace_anchor"
+version.workspace = true
+edition.workspace = true
