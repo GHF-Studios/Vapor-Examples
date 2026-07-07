@@ -1,6 +1,7 @@
 schema = 1
 
 [workspace]
-id = "ghf-studios/vapor-examples"
+name = "vapor-examples"
+organization = "ghf-studios"
 version = "0.5.0"
 repository = "https://github.com/GHF-Studios/Vapor-Examples"

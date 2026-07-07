@@ -1,7 +1,7 @@
 schema = 1
 
 [packagepack]
-id = "ghf-studios/vapor-examples/basic-packagepack"
+name = "basic-packagepack"
 version.workspace = true
 
 [packagepack.engine]

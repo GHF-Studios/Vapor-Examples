@@ -1,5 +1,5 @@
 schema = 1
 
 [game]
-id = "ghf-studios/vapor-examples/basic-game"
+name = "basic-game"
 version.workspace = true
