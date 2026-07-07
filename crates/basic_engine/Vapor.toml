@@ -1,0 +1,5 @@
+schema = 1
+
+[engine]
+id = "ghf-studios/vapor-examples/basic-engine"
+version.workspace = true

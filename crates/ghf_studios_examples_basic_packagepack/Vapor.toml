@@ -1,4 +1,0 @@
-# MANAGED BY VAPOR. EDIT Vapor.toml, THEN RUN `vapor-sdk workspace sync`.
-[packagepack]
-id = "ghf-studios.examples.basic-packagepack"
-# END MANAGED BY VAPOR.

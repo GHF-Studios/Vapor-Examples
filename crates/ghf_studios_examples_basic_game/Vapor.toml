@@ -1,4 +1,0 @@
-# MANAGED BY VAPOR. EDIT Vapor.toml, THEN RUN `vapor-sdk workspace sync`.
-[game]
-id = "ghf-studios.examples.basic-game"
-# END MANAGED BY VAPOR.

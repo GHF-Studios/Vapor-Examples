@@ -1,0 +1,11 @@
+schema = 1
+
+[packagepack]
+id = "ghf-studios/vapor-examples/basic-packagepack"
+version.workspace = true
+
+[packagepack.engine]
+id = "ghf-studios/vapor-examples/basic-engine"
+
+[packagepack.game]
+id = "ghf-studios/vapor-examples/basic-game"

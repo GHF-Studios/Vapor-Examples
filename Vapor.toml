@@ -1,15 +1,6 @@
-[project]
-kind = "custom-content"
-id = "ghf-studios.vapor-examples"
+schema = 1
 
-[[content]]
-kind = "engine"
-id = "ghf-studios.examples.basic-engine"
-
-[[content]]
-kind = "game"
-id = "ghf-studios.examples.basic-game"
-
-[[content]]
-kind = "packagepack"
-id = "ghf-studios.examples.basic-packagepack"
+[workspace]
+id = "ghf-studios/vapor-examples"
+version = "0.5.0"
+repository = "https://github.com/GHF-Studios/Vapor-Examples"
