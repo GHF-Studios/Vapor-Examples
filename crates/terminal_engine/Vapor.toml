@@ -1,0 +1,14 @@
+schema = 1
+
+[engine]
+name = "terminal-engine"
+version.workspace = true
+binaries = ["terminal-engine"]
+
+[engine.steam]
+app-id = 2122620
+visibility = "private"
+title = "Terminal Engine Example"
+description = "Example Vapor engine that loads a game library and runs a small terminal loop."
+tags = ["engine", "example", "terminal"]
+change-note = "Vapor example content update."

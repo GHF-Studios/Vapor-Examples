@@ -1,0 +1,19 @@
+schema = 1
+
+[packagepack]
+name = "hello-world-on-steroids-packagepack"
+version.workspace = true
+
+[packagepack.engine]
+id = "ghf-studios/vapor-examples/terminal-engine"
+
+[packagepack.game]
+id = "ghf-studios/vapor-examples/hello-world-on-steroids-game"
+
+[packagepack.steam]
+app-id = 2122620
+visibility = "private"
+title = "Hello World on Steroids Packagepack Example"
+description = "Example Vapor packagepack that composes the terminal engine and game examples."
+tags = ["packagepack", "example", "terminal"]
+change-note = "Vapor example content update."

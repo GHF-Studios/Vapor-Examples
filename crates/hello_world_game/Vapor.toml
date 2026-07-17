@@ -1,0 +1,17 @@
+schema = 1
+
+[game]
+name = "hello-world-on-steroids-game"
+version.workspace = true
+libraries = ["hello-world-on-steroids-game"]
+
+[game.engine]
+id = "ghf-studios/vapor-examples/terminal-engine"
+
+[game.steam]
+app-id = 2122620
+visibility = "private"
+title = "Hello World on Steroids Game Example"
+description = "Example Vapor game library loaded by the terminal engine example."
+tags = ["game", "example", "terminal"]
+change-note = "Vapor example content update."
