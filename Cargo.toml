@@ -1,4 +1,4 @@
-# MANAGED BY VAPOR. EDIT Vapor.toml, THEN RUN `vapor-sdk workspace sync`.
+# MANAGED BY VAPOR. EDIT Workspace.vapor.toml OR THE ROLE-SPECIFIC CONTENT MANIFEST, THEN RUN `vapor-sdk workspace sync`.
 [workspace]
 resolver = "3"
 members = ["crates/*"]

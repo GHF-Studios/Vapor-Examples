@@ -50,13 +50,13 @@ impl LaunchContext {
         let engine_root = PathBuf::from(required_env("VAPOR_ENGINE_ROOT")?);
         let runtime_target = required_env("VAPOR_RUNTIME_TARGET")?;
 
-        let packagepack_manifest = read_manifest(&packagepack_root)?;
+        let packagepack_manifest = read_manifest(&packagepack_root, "Packagepack.vapor.toml")?;
         let game_id = manifest_dependency_id(&packagepack_manifest, "packagepack", "game")
             .or_else(|| manifest_value(&packagepack_manifest, "packagepack.game", "id"))
             .ok_or_else(|| {
                 format!(
                     "packagepack manifest has no game dependency: {}",
-                    packagepack_root.join("Vapor.toml").display()
+                    packagepack_root.join("Packagepack.vapor.toml").display()
                 )
             })?;
         let installed_root = installed_content_root(&packagepack_root, &packagepack_id)?;
@@ -68,13 +68,13 @@ impl LaunchContext {
             ));
         }
 
-        let game_manifest = read_manifest(&game_root)?;
+        let game_manifest = read_manifest(&game_root, "Game.vapor.toml")?;
         let game_engine_id = manifest_dependency_id(&game_manifest, "game", "engine")
             .or_else(|| manifest_value(&game_manifest, "game.engine", "id"))
             .ok_or_else(|| {
                 format!(
                     "game manifest has no engine dependency: {}",
-                    game_root.join("Vapor.toml").display()
+                    game_root.join("Game.vapor.toml").display()
                 )
             })?;
         if game_engine_id != engine_id {
@@ -92,7 +92,7 @@ impl LaunchContext {
             .ok_or_else(|| {
                 format!(
                     "game manifest declares no runtime library: {}",
-                    game_root.join("Vapor.toml").display()
+                    game_root.join("Game.vapor.toml").display()
                 )
             })?;
 
@@ -330,8 +330,8 @@ fn required_env(name: &str) -> Result<String, String> {
     })
 }
 
-fn read_manifest(root: &Path) -> Result<String, String> {
-    let path = root.join("Vapor.toml");
+fn read_manifest(root: &Path, file_name: &str) -> Result<String, String> {
+    let path = root.join(file_name);
     fs::read_to_string(&path)
         .map_err(|error| format!("failed to read '{}': {error}", path.display()))
 }
