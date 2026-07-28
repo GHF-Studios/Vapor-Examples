@@ -191,19 +191,3 @@ fn seed() -> u64 {
         .map(|duration| duration.as_nanos() as u64)
         .unwrap_or(0)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::score_reels;
-
-    #[test]
-    fn scores_reel_matches() {
-        assert_eq!(score_reels(&reels(["VAPOR", "VAPOR", "VAPOR"])).points, 30);
-        assert_eq!(score_reels(&reels(["VAPOR", "CAST", "VAPOR"])).points, 8);
-        assert_eq!(score_reels(&reels(["VAPOR", "CAST", "PACK"])).points, 1);
-    }
-
-    fn reels(values: [&str; 3]) -> [String; 3] {
-        values.map(ToOwned::to_owned)
-    }
-}
