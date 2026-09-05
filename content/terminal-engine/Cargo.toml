@@ -1,0 +1,11 @@
+[package]
+name = "vapor-example-terminal-engine"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "vapor-example-terminal-engine"
+path = "src/main.rs"

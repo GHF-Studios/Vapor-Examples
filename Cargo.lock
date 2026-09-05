@@ -3,28 +3,13 @@
 version = 4
 
 [[package]]
-name = "ghf_studios_examples_basic_engine"
-version = "0.5.0"
+name = "vapor-example-hello-world-game"
+version = "0.1.0"
 
 [[package]]
-name = "ghf_studios_examples_basic_game"
-version = "0.5.0"
+name = "vapor-example-terminal-engine"
+version = "0.1.0"
 
 [[package]]
-name = "ghf_studios_examples_basic_packagepack"
-version = "0.5.0"
-
-[[package]]
-name = "hello-world-on-steroids-game"
-version = "0.5.0"
-dependencies = [
- "terminal-engine",
-]
-
-[[package]]
-name = "hello-world-on-steroids-packagepack"
-version = "0.5.0"
-
-[[package]]
-name = "terminal-engine"
-version = "0.5.0"
+name = "vapor-example-tiny-game-mod"
+version = "0.1.0"

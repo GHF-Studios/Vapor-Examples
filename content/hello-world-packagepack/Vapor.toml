@@ -1,0 +1,16 @@
+[content]
+id = "ghf-studios/vapor-examples/hello-world-packagepack"
+version = "0.1.0"
+kind = "packagepack"
+
+[dependencies.engine]
+id = "ghf-studios/vapor-examples/terminal-engine"
+version = "^0.1"
+
+[dependencies.game]
+id = "ghf-studios/vapor-examples/hello-world-game"
+version = "^0.1"
+
+[dependencies.mod]
+id = "ghf-studios/vapor-examples/tiny-game-mod"
+version = "^0.1"

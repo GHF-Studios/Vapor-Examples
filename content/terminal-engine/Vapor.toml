@@ -1,0 +1,4 @@
+[content]
+id = "ghf-studios/vapor-examples/terminal-engine"
+version = "0.1.0"
+kind = "engine"

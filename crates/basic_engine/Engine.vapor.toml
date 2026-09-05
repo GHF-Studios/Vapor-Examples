@@ -1,5 +1,0 @@
-schema = 1
-
-[engine]
-name = "basic-engine"
-version.workspace = true
