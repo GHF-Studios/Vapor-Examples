@@ -4,4 +4,6 @@ members = [
     "content/terminal-engine",
     "content/hello-world-game",
     "content/tiny-game-mod",
+    "content/wheel-core",
+    "content/wheel-rules",
 ]

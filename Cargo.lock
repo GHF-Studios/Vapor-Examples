@@ -13,3 +13,14 @@ version = "0.1.0"
 [[package]]
 name = "vapor-example-tiny-game-mod"
 version = "0.1.0"
+
+[[package]]
+name = "vapor-example-wheel-core"
+version = "0.1.0"
+
+[[package]]
+name = "vapor-example-wheel-rules"
+version = "0.1.0"
+dependencies = [
+ "vapor-example-wheel-core",
+]
