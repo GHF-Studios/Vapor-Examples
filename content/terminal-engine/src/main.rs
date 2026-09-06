@@ -1,3 +1,3 @@
 fn main() {
-    println!("[Engine] standalone bootstrap");
+    vapor_example_terminal_engine::run(|_| {});
 }

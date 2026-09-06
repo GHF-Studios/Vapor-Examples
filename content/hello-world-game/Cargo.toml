@@ -3,5 +3,10 @@ name = "vapor-example-hello-world-game"
 version = "0.1.0"
 edition = "2024"
 
+[dependencies]
+bevy_ecs = "0.19.1"
+terminal_engine = { version = "=0.1.0", path = "../terminal-engine", package = "vapor-example-terminal-engine" }
+wheel_rules = { version = "=0.1.0", path = "../wheel-rules", package = "vapor-example-wheel-rules" }
+
 [lib]
 path = "src/lib.rs"

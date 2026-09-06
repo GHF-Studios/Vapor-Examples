@@ -3,5 +3,9 @@ name = "vapor-example-tiny-game-mod"
 version = "0.1.0"
 edition = "2024"
 
+[dependencies]
+bevy_ecs = "0.19.1"
+hello_world_game = { version = "=0.1.0", path = "../hello-world-game", package = "vapor-example-hello-world-game" }
+
 [lib]
 path = "src/lib.rs"

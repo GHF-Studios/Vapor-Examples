@@ -6,3 +6,7 @@ kind = "game"
 [dependencies.engine]
 id = "ghf-studios/vapor-examples/terminal-engine"
 version = "^0.1"
+
+[dependencies.wheel_rules]
+id = "ghf-studios/vapor-examples/wheel-rules"
+version = "^0.1"
