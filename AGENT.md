@@ -9,5 +9,5 @@ Purpose: govern AI work in the Vapor-Examples repo. This file is operating proto
 5. Vapor-Examples is official example/test content only.
 6. This repo may contain many Engines, Games, Mods, Extension Mods, and packs in one multi-project project.
 7. Vapor-Examples should consume Vapor like an external project where practical.
-8. Vapor-Examples should not depend on Vapor-SDK or Vapor-Launcher as ordinary code dependencies.
+8. Vapor-Examples should not depend on Vapor-CLI or Vapor-Studio as ordinary code dependencies.
 9. Preserve raw question batches under `ai_conversation_logs/` when this repo develops its own Q&A record.
