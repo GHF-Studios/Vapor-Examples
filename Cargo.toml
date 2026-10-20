@@ -7,3 +7,10 @@ members = [
     "content/wheel-core",
     "content/wheel-rules",
 ]
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.full-debug]
+inherits = "dev"
+debug = true
