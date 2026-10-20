@@ -1,0 +1,18 @@
+schema = 1
+
+[crate]
+name = "wheel-rules"
+version.workspace = true
+libraries = ["wheel_rules"]
+
+[[crate.dependencies]]
+id = "ghf-studios/vapor-examples/wheel-core"
+version = "^0.1"
+
+[crate.steam]
+app-id = 2122620
+visibility = "private"
+title = "Wheel Rules"
+description = "Wheel and loot-table rules for Vapor’s terminal wheel example."
+tags = ["vapor", "example", "crate"]
+change-note = "Initial private Vapor content lifecycle test."

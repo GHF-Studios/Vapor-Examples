@@ -1,0 +1,14 @@
+schema = 1
+
+[engine]
+name = "terminal-engine"
+version.workspace = true
+binaries = ["vapor-example-terminal-engine"]
+
+[engine.steam]
+app-id = 2122620
+visibility = "private"
+title = "Terminal Engine"
+description = "Small terminal runtime used by the Vapor wheel example."
+tags = ["vapor", "example", "engine"]
+change-note = "Initial private Vapor content lifecycle test."

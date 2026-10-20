@@ -1,33 +1,13 @@
 # Vapor Examples
 
-Small source examples shipped with the Vapor app so a new developer can inspect
-the current workspace/project/content shape without needing the full Vapor-Root
-checkout.
+Small source examples shipped with the Vapor app for inspecting the current
+workspace, content, and packagepack shapes.
 
-This workspace contains two groups of registered Vapor content projects.
+The terminal proof is a deliberately small salvage roguelike: spin an
+eight-sector wheel, take salvage or damage, and extract before the hull fails.
+A tiny Game Mod adds a ninth bonus sector. Wheel rules and data are separate
+Crates; the Engine owns terminal input and rendering.
 
-Minimal shape examples:
-
-- `basic_engine`
-- `basic_game`
-- `basic_packagepack`
-
-Terminal runtime proof:
-
-- `terminal_engine`
-- `hello_world_game`
-- `hello_world_packagepack`
-
-The basic examples are deliberately minimal. The terminal proof is the
-"hello world on steroids" example: a small engine binary loads a game library
-through Vapor's installed packagepack composition and runs a terminal game loop.
+The playable `hello-world-packagepack` is a non-default composition. Its
+Workshop metadata is private and exists for testing Vapor's content lifecycle.
 It is example content, not first-party Loo-Cast product content.
-
-For a new publishable workspace, use the Vapor Shell template command instead of
-editing these files in place:
-
-```text
-source init basic-content /path/to/my-content --organization my-studio --name my-content
-content validate
-content deploy my-studio/my-content/my-content-packagepack --select
-```

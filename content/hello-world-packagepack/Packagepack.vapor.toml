@@ -1,0 +1,26 @@
+schema = 1
+
+[packagepack]
+name = "hello-world-packagepack"
+version.workspace = true
+binaries = ["vapor-example-terminal-engine"]
+
+[packagepack.engine]
+id = "ghf-studios/vapor-examples/terminal-engine"
+version = "^0.1"
+
+[packagepack.game]
+id = "ghf-studios/vapor-examples/hello-world-game"
+version = "^0.1"
+
+[[packagepack.dependencies]]
+id = "ghf-studios/vapor-examples/tiny-game-mod"
+version = "^0.1"
+
+[packagepack.steam]
+app-id = 2122620
+visibility = "private"
+title = "Wheel Salvage Demo"
+description = "A playable non-default Vapor composition featuring the terminal wheel roguelike."
+tags = ["vapor", "example", "packagepack"]
+change-note = "Initial private Vapor content lifecycle test."

@@ -1,8 +1,0 @@
-[content]
-id = "ghf-studios/vapor-examples/wheel-rules"
-version = "0.1.0"
-kind = "library"
-
-[dependencies.wheel_core]
-id = "ghf-studios/vapor-examples/wheel-core"
-version = "^0.1"

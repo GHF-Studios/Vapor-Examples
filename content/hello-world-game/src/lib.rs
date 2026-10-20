@@ -1,276 +1,276 @@
-//! Hello World Game: the evolving center of Vapor's
-//! Hello World on Steroids techdemo.
+//! A small wheel-driven salvage roguelike used to prove Vapor's terminal game
+//! composition and game-mod extension path.
 //!
-//! It now behaves as an actual tiny interactive terminal game.
-//!
-//! The Game owns:
-//!
-//! - LootTables;
-//! - Wheels;
-//! - GameModes;
-//! - spin strategies;
-//! - input interpretation;
-//! - game-state resolution;
-//! - Game-specific presentation.
-//!
-//! The Terminal Engine owns the actual terminal, input acquisition, timing,
-//! ECS host, and framebuffer.
+//! The Game owns the wheel, run rules, and presentation. The Terminal Engine
+//! owns terminal input, timing, the ECS host, and the framebuffer.
 
 use bevy_ecs::{
     prelude::{Res, ResMut, Resource},
     schedule::{IntoScheduleConfigs, SystemSet},
 };
-use std::collections::BTreeMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 use terminal_engine::{EngineControl, EngineSet, InputEvent, InputState, Key, TerminalFrame};
 
-pub use terminal_engine::{App, Startup, Update};
-
-pub use wheel_rules::{
-    GameModeId, LootTable, LootTableId, OutcomeId, WheelDefinition, WheelId, WheelOutcome,
-};
+pub use terminal_engine::{App, Startup, Update, create_app};
+pub use wheel_rules::{LootTable, LootTableId, OutcomeId, WheelDefinition, WheelId, WheelOutcome};
 
 pub const HELLO_WORLD_LOOT_TABLE_ID: &str = "hello-world";
 pub const HELLO_WORLD_WHEEL_ID: &str = "hello-world";
-pub const CLASSIC_GAME_MODE_ID: &str = "classic";
+const SPIN_FRAME_COUNT: u8 = 36;
+const STARTING_HULL: u8 = 3;
 
+/// Stable phases that game mods can join to extend the wheel.
 #[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum WheelGameSet {
     Register,
     Input,
     Spin,
-    Resolve,
     Present,
 }
 
-#[derive(Resource, Default)]
-pub struct LootTableRegistry {
-    tables: BTreeMap<LootTableId, LootTable>,
-}
-
-impl LootTableRegistry {
-    pub fn register(&mut self, table: LootTable) -> Option<LootTable> {
-        self.tables.insert(table.id().clone(), table)
-    }
-
-    pub fn table(&self, id: &LootTableId) -> Option<&LootTable> {
-        self.tables.get(id)
-    }
-
-    pub fn table_mut(&mut self, id: &LootTableId) -> Option<&mut LootTable> {
-        self.tables.get_mut(id)
-    }
-}
-
-#[derive(Resource, Default)]
-pub struct WheelRegistry {
-    wheels: BTreeMap<WheelId, WheelDefinition>,
-}
-
-impl WheelRegistry {
-    pub fn register(&mut self, wheel: WheelDefinition) -> Option<WheelDefinition> {
-        self.wheels.insert(wheel.id().clone(), wheel)
-    }
-
-    pub fn wheel(&self, id: &WheelId) -> Option<&WheelDefinition> {
-        self.wheels.get(id)
-    }
-}
-
-/// Game-owned selection contract.
+/// The single wheel and its current run state.
 ///
-/// A downstream Game Mod may provide a new implementation without Vapor or
-/// the Terminal Engine knowing anything about that implementation.
-pub trait SpinStrategy: Send + Sync + 'static {
-    fn select(&self, outcomes: &[WheelOutcome], spin_index: u64) -> Option<usize>;
+/// A game mod can add a wheel sector during [`WheelGameSet::Register`] without
+/// introducing another registry or runtime service.
+#[derive(Debug, Resource)]
+pub struct WheelGame {
+    wheel: WheelDefinition,
+    table: LootTable,
+    seed: u64,
+    spin_count: u64,
+    frames_remaining: u8,
+    preview_sector: usize,
+    result: Option<WheelOutcome>,
+    run: Expedition,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct RoundRobinSpin;
+impl WheelGame {
+    /// Create a wheel with a deterministic seed, useful for tests and demos.
+    pub fn new(seed: u64) -> Self {
+        let table_id = LootTableId::new(HELLO_WORLD_LOOT_TABLE_ID);
+        let table = LootTable::new(
+            table_id.clone(),
+            [
+                WheelOutcome::new(OutcomeId::new("salvage"), "Loose salvage"),
+                WheelOutcome::new(OutcomeId::new("salvage"), "Loose salvage"),
+                WheelOutcome::new(OutcomeId::new("salvage"), "Loose salvage"),
+                WheelOutcome::new(OutcomeId::new("salvage"), "Loose salvage"),
+                WheelOutcome::new(OutcomeId::new("hazard"), "Debris strike"),
+                WheelOutcome::new(OutcomeId::new("hazard"), "Debris strike"),
+                WheelOutcome::new(OutcomeId::new("cache"), "Sealed cache"),
+                WheelOutcome::new(OutcomeId::new("repair"), "Repair bay"),
+            ],
+        );
 
-impl SpinStrategy for RoundRobinSpin {
-    fn select(&self, outcomes: &[WheelOutcome], spin_index: u64) -> Option<usize> {
-        if outcomes.is_empty() {
-            None
-        } else {
-            Some(spin_index as usize % outcomes.len())
-        }
-    }
-}
-
-pub struct GameModeDefinition {
-    id: GameModeId,
-    wheel: WheelId,
-    strategy: Box<dyn SpinStrategy>,
-}
-
-impl GameModeDefinition {
-    pub fn new(id: GameModeId, wheel: WheelId, strategy: impl SpinStrategy) -> Self {
         Self {
-            id,
-            wheel,
-            strategy: Box::new(strategy),
+            wheel: WheelDefinition::new(WheelId::new(HELLO_WORLD_WHEEL_ID), table_id),
+            table,
+            seed,
+            spin_count: 0,
+            frames_remaining: 0,
+            preview_sector: 0,
+            result: None,
+            run: Expedition::default(),
         }
     }
 
-    pub fn id(&self) -> &GameModeId {
-        &self.id
+    /// Add a sector from a game mod or other composed content.
+    pub fn add_outcome(&mut self, outcome: WheelOutcome) {
+        self.table.add_outcome(outcome);
     }
 
-    pub fn wheel(&self) -> &WheelId {
+    /// Current sectors, in wheel order.
+    pub fn sectors(&self) -> &[WheelOutcome] {
+        self.table.outcomes()
+    }
+
+    /// The semantic wheel descriptor used by this game.
+    pub fn wheel(&self) -> &WheelDefinition {
         &self.wheel
     }
 
-    pub fn strategy(&self) -> &dyn SpinStrategy {
-        self.strategy.as_ref()
+    /// Number of sectors currently installed on the wheel.
+    pub fn sector_count(&self) -> usize {
+        self.table.outcomes().len()
+    }
+
+    fn is_spinning(&self) -> bool {
+        self.frames_remaining > 0
+    }
+
+    fn request_spin(&mut self) {
+        if !self.run.finished && !self.is_spinning() {
+            self.frames_remaining = SPIN_FRAME_COUNT;
+            self.result = None;
+        }
+    }
+
+    fn advance_spin(&mut self) {
+        if !self.is_spinning() {
+            return;
+        }
+
+        let animation_seed = self.seed ^ self.spin_count.wrapping_mul(0xA076_1D64_78BD_642F);
+        self.preview_sector = (mix64(animation_seed ^ u64::from(self.frames_remaining)) as usize)
+            % self.sector_count();
+        self.frames_remaining -= 1;
+
+        if self.frames_remaining > 0 {
+            return;
+        }
+
+        self.preview_sector =
+            (mix64(self.seed.wrapping_add(self.spin_count)) as usize) % self.sector_count();
+        self.spin_count = self.spin_count.saturating_add(1);
+        let outcome = self.table.outcomes()[self.preview_sector].clone();
+        self.run.resolve(outcome.id());
+        self.result = Some(outcome);
+    }
+
+    fn extract(&mut self) {
+        if !self.is_spinning() {
+            self.run.extract();
+        }
+    }
+
+    fn restart(&mut self) {
+        self.frames_remaining = 0;
+        self.result = None;
+        self.run.restart();
     }
 }
 
-#[derive(Resource, Default)]
-pub struct GameModeRegistry {
-    modes: BTreeMap<GameModeId, GameModeDefinition>,
+#[derive(Debug)]
+struct Expedition {
+    depth: u32,
+    hull: u8,
+    max_hull: u8,
+    salvage: u32,
+    banked_salvage: u32,
+    best_depth: u32,
+    finished: bool,
+    last_event: String,
 }
 
-impl GameModeRegistry {
-    pub fn register(&mut self, mode: GameModeDefinition) -> Option<GameModeDefinition> {
-        self.modes.insert(mode.id().clone(), mode)
-    }
-
-    pub fn mode(&self, id: &GameModeId) -> Option<&GameModeDefinition> {
-        self.modes.get(id)
-    }
-}
-
-#[derive(Resource)]
-pub struct ActiveGameMode {
-    id: GameModeId,
-}
-
-impl ActiveGameMode {
-    pub fn new(id: GameModeId) -> Self {
-        Self { id }
-    }
-
-    pub fn id(&self) -> &GameModeId {
-        &self.id
-    }
-
-    pub fn select(&mut self, id: GameModeId) {
-        self.id = id;
+impl Default for Expedition {
+    fn default() -> Self {
+        Self {
+            depth: 1,
+            hull: STARTING_HULL,
+            max_hull: STARTING_HULL,
+            salvage: 0,
+            banked_salvage: 0,
+            best_depth: 1,
+            finished: false,
+            last_event: "Spin to descend. Extract to keep your haul.".to_owned(),
+        }
     }
 }
 
-#[derive(Resource, Default)]
-struct SpinRequest(bool);
+impl Expedition {
+    fn resolve(&mut self, outcome: &OutcomeId) {
+        if self.finished {
+            return;
+        }
 
-impl SpinRequest {
-    fn request(&mut self) {
-        self.0 = true;
+        self.last_event = match outcome.as_str() {
+            "salvage" => {
+                self.salvage += 1;
+                "Loose salvage: +1".to_owned()
+            }
+            "cache" => {
+                self.salvage += 3;
+                "Sealed cache: +3 salvage".to_owned()
+            }
+            "repair" if self.hull < self.max_hull => {
+                self.hull += 1;
+                "Repair bay: +1 hull".to_owned()
+            }
+            "repair" => {
+                self.salvage += 1;
+                "Hull full: repair converted to +1 salvage".to_owned()
+            }
+            "hazard" => {
+                let damage = 1 + self.depth.saturating_sub(1) / 3;
+                self.hull = self
+                    .hull
+                    .saturating_sub(u8::try_from(damage).unwrap_or(u8::MAX));
+                format!("Debris strike: -{damage} hull")
+            }
+            // A mod can add a sector without changing the base game's rules.
+            _ => {
+                self.salvage += 2;
+                "Bonus sector: +2 salvage".to_owned()
+            }
+        };
+
+        if self.hull == 0 {
+            self.best_depth = self.best_depth.max(self.depth);
+            self.finished = true;
+            self.last_event.push_str(" — run lost");
+            return;
+        }
+
+        self.depth += 1;
+        self.best_depth = self.best_depth.max(self.depth);
+        if self.depth.is_multiple_of(3) {
+            self.max_hull += 1;
+            self.hull += 1;
+            self.last_event.push_str("; plating reinforced (+1 hull)");
+        }
     }
 
-    fn take(&mut self) -> bool {
-        std::mem::take(&mut self.0)
+    fn extract(&mut self) {
+        if self.finished || self.depth == 1 {
+            return;
+        }
+
+        self.finished = true;
+        self.banked_salvage += self.salvage;
+        self.last_event = format!("Extracted safely: banked {} salvage", self.salvage);
+    }
+
+    fn restart(&mut self) {
+        let banked_salvage = self.banked_salvage;
+        let best_depth = self.best_depth;
+        *self = Self::default();
+        self.banked_salvage = banked_salvage;
+        self.best_depth = best_depth;
+        self.last_event = "New run. The wheel is ready.".to_owned();
     }
 }
 
-#[derive(Resource, Default)]
-struct SpinCounter(u64);
-
-#[derive(Resource, Default)]
-pub struct SpinSelection {
-    fresh: bool,
-    mode: Option<GameModeId>,
-    loot_table: Option<LootTableId>,
-    outcome: Option<OutcomeId>,
+fn mix64(value: u64) -> u64 {
+    let mut value = value.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    value = (value ^ (value >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    value = (value ^ (value >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    value ^ (value >> 31)
 }
 
-impl SpinSelection {
-    pub fn mode(&self) -> Option<&GameModeId> {
-        self.mode.as_ref()
-    }
-
-    pub fn loot_table(&self) -> Option<&LootTableId> {
-        self.loot_table.as_ref()
-    }
-
-    pub fn outcome(&self) -> Option<&OutcomeId> {
-        self.outcome.as_ref()
-    }
-}
-
-#[derive(Resource, Default)]
-pub struct SpinResult {
-    mode: Option<GameModeId>,
-    outcome: Option<WheelOutcome>,
-}
-
-impl SpinResult {
-    pub fn mode(&self) -> Option<&GameModeId> {
-        self.mode.as_ref()
-    }
-
-    pub fn outcome(&self) -> Option<&WheelOutcome> {
-        self.outcome.as_ref()
-    }
-}
-
-/// Install the Hello World Game into a compatible Terminal Engine App.
-///
-/// This remains a Terminal-Engine-specific integration surface rather than a
-/// universal Vapor Game ABI.
+/// Install the game into a compatible Terminal Engine application.
 pub fn install(app: &mut App) {
-    let mut loot_tables = LootTableRegistry::default();
+    let seed = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos() as u64)
+        .unwrap_or_default();
+    install_with_seed(app, seed);
+}
 
-    loot_tables.register(LootTable::new(
-        LootTableId::new(HELLO_WORLD_LOOT_TABLE_ID),
-        [
-            WheelOutcome::new(OutcomeId::new("hello"), "Hello from Vapor!"),
-            WheelOutcome::new(OutcomeId::new("hello-again"), "Hello again from Vapor!"),
-            WheelOutcome::new(OutcomeId::new("cargo"), "Cargo says hello too."),
-        ],
-    ));
-
-    let mut wheels = WheelRegistry::default();
-
-    wheels.register(WheelDefinition::new(
-        WheelId::new(HELLO_WORLD_WHEEL_ID),
-        LootTableId::new(HELLO_WORLD_LOOT_TABLE_ID),
-    ));
-
-    let mut modes = GameModeRegistry::default();
-
-    modes.register(GameModeDefinition::new(
-        GameModeId::new(CLASSIC_GAME_MODE_ID),
-        WheelId::new(HELLO_WORLD_WHEEL_ID),
-        RoundRobinSpin,
-    ));
-
-    app.insert_resource(loot_tables)
-        .insert_resource(wheels)
-        .insert_resource(modes)
-        .insert_resource(ActiveGameMode::new(GameModeId::new(CLASSIC_GAME_MODE_ID)))
-        .init_resource::<SpinRequest>()
-        .init_resource::<SpinCounter>()
-        .init_resource::<SpinSelection>()
-        .init_resource::<SpinResult>()
+/// Install the game with a stable wheel seed for deterministic tests or demos.
+pub fn install_with_seed(app: &mut App, seed: u64) {
+    app.insert_resource(WheelGame::new(seed))
         .configure_sets(Startup, WheelGameSet::Register.in_set(EngineSet::Configure))
         .configure_sets(Update, WheelGameSet::Input.in_set(EngineSet::Input))
         .configure_sets(Update, WheelGameSet::Spin.in_set(EngineSet::Simulate))
-        .configure_sets(
-            Update,
-            WheelGameSet::Resolve
-                .in_set(EngineSet::Simulate)
-                .after(WheelGameSet::Spin),
-        )
         .configure_sets(Update, WheelGameSet::Present.in_set(EngineSet::Present))
         .add_systems(Update, handle_input.in_set(WheelGameSet::Input))
-        .add_systems(Update, spin.in_set(WheelGameSet::Spin))
-        .add_systems(Update, resolve.in_set(WheelGameSet::Resolve))
+        .add_systems(Update, advance_spin.in_set(WheelGameSet::Spin))
         .add_systems(Update, present.in_set(WheelGameSet::Present));
 }
 
 fn handle_input(
     input: Res<InputState>,
-    mut spin: ResMut<SpinRequest>,
+    mut game: ResMut<WheelGame>,
     mut engine: ResMut<EngineControl>,
 ) {
     for event in input.events() {
@@ -279,137 +279,71 @@ fn handle_input(
         };
 
         match input.key {
-            Key::Character(' ') | Key::Enter => {
-                spin.request();
-            }
-
-            Key::Character('q' | 'Q') | Key::Escape => {
-                engine.request_quit();
-            }
-
+            Key::Character(' ') | Key::Enter => game.request_spin(),
+            Key::Character('e' | 'E') => game.extract(),
+            Key::Character('r' | 'R') => game.restart(),
+            Key::Character('q' | 'Q') | Key::Escape => engine.request_quit(),
             _ => {}
         }
     }
 }
 
-fn spin(
-    modes: Res<GameModeRegistry>,
-    active: Res<ActiveGameMode>,
-    wheels: Res<WheelRegistry>,
-    loot_tables: Res<LootTableRegistry>,
-    mut request: ResMut<SpinRequest>,
-    mut counter: ResMut<SpinCounter>,
-    mut selection: ResMut<SpinSelection>,
-) {
-    selection.fresh = false;
-
-    if !request.take() {
-        return;
-    }
-
-    let Some(mode) = modes.mode(active.id()) else {
-        return;
-    };
-
-    let Some(wheel) = wheels.wheel(mode.wheel()) else {
-        return;
-    };
-
-    let Some(table) = loot_tables.table(wheel.loot_table()) else {
-        return;
-    };
-
-    let selected = mode
-        .strategy()
-        .select(table.outcomes(), counter.0)
-        .and_then(|index| table.outcomes().get(index));
-
-    counter.0 += 1;
-
-    let Some(outcome) = selected else {
-        return;
-    };
-
-    selection.fresh = true;
-    selection.mode = Some(mode.id().clone());
-    selection.loot_table = Some(table.id().clone());
-    selection.outcome = Some(outcome.id().clone());
+fn advance_spin(mut game: ResMut<WheelGame>) {
+    game.advance_spin();
 }
 
-fn resolve(
-    selection: Res<SpinSelection>,
-    loot_tables: Res<LootTableRegistry>,
-    mut result: ResMut<SpinResult>,
-) {
-    if !selection.fresh {
-        return;
-    }
-
-    let (Some(mode), Some(table_id), Some(outcome_id)) = (
-        selection.mode(),
-        selection.loot_table(),
-        selection.outcome(),
-    ) else {
-        return;
-    };
-
-    let Some(table) = loot_tables.table(table_id) else {
-        return;
-    };
-
-    let Some(outcome) = table.outcome(outcome_id) else {
-        return;
-    };
-
-    result.mode = Some(mode.clone());
-    result.outcome = Some(outcome.clone());
-}
-
-fn present(
-    active: Res<ActiveGameMode>,
-    modes: Res<GameModeRegistry>,
-    wheels: Res<WheelRegistry>,
-    loot_tables: Res<LootTableRegistry>,
-    result: Res<SpinResult>,
-    mut frame: ResMut<TerminalFrame>,
-) {
+fn present(game: Res<WheelGame>, mut frame: ResMut<TerminalFrame>) {
     frame.draw_border();
+    frame.write_centered(1, "WHEEL DESCENT");
+    frame.write_centered(
+        3,
+        format!(
+            "DEPTH {:02}   HULL {}/{}   HAUL {}   BANKED {}",
+            game.run.depth,
+            game.run.hull,
+            game.run.max_hull,
+            game.run.salvage,
+            game.run.banked_salvage,
+        ),
+    );
+    frame.write_centered(4, format!("WHEEL: {}", game.wheel.id()));
 
-    frame.write_centered(1, "HELLO WORLD ON STEROIDS");
+    let sectors = game
+        .sectors()
+        .iter()
+        .map(|outcome| outcome.id().as_str().to_ascii_uppercase())
+        .collect::<Vec<_>>()
+        .join("  ");
+    frame.write_centered(6, format!("[ {sectors} ]"));
 
-    frame.write(3, 3, format!("Mode: {}", active.id()));
-
-    let mode = modes.mode(active.id());
-
-    let wheel = mode.and_then(|mode| wheels.wheel(mode.wheel()));
-
-    let table = wheel.and_then(|wheel| loot_tables.table(wheel.loot_table()));
-
-    if let Some(wheel) = wheel {
-        frame.write(3, 4, format!("Wheel: {}", wheel.id()));
+    if game.is_spinning() {
+        frame.write_centered(8, format!("---  {}  ---", game.preview_sector + 1));
+        frame.write_centered(10, "The wheel is rattling through the dark...");
+    } else if let Some(outcome) = &game.result {
+        frame.write_centered(8, format!("---  {}  ---", game.preview_sector + 1));
+        frame.write_centered(10, outcome.text());
+    } else {
+        frame.write_centered(8, "---  THE WHEEL WAITS  ---");
+        frame.write_centered(10, "Spin to descend. Extract to keep your haul.");
     }
+    frame.write_centered(12, &game.run.last_event);
+    frame.write_centered(
+        14,
+        format!(
+            "BEST DEPTH {}   |   SESSION BANK {}",
+            game.run.best_depth, game.run.banked_salvage
+        ),
+    );
 
-    if let Some(table) = table {
-        let labels = table
-            .outcomes()
-            .iter()
-            .map(|outcome| outcome.id().as_str())
-            .collect::<Vec<_>>()
-            .join(" | ");
-
-        frame.write_centered(7, format!("[ {labels} ]"));
-    }
-
-    let result_text = result
-        .outcome()
-        .map(WheelOutcome::text)
-        .unwrap_or("(press SPACE to spin)");
-
-    frame.write_centered(10, format!("Last spin: {result_text}"));
-
-    let y = frame.height().saturating_sub(2);
-
-    frame.write_centered(y, "[SPACE/ENTER] spin    [Q/ESC] quit");
+    let controls = if game.run.finished {
+        "[R] new run   [Q/ESC] quit"
+    } else if game.is_spinning() {
+        "Wheel spinning..."
+    } else {
+        "[SPACE/ENTER] spin   [E] extract   [Q/ESC] quit"
+    };
+    let controls_y = frame.height().saturating_sub(2);
+    frame.write_centered(controls_y, controls);
 }
 
 #[cfg(test)]
@@ -418,86 +352,123 @@ mod tests {
     use terminal_engine::{InputEvent, KeyInput};
 
     #[test]
-    fn installs_coherent_base_game_content() {
-        let mut app = terminal_engine::create_app();
+    fn a_mod_can_add_a_sector_without_a_new_registry() {
+        let mut game = WheelGame::new(17);
+        game.add_outcome(WheelOutcome::new(OutcomeId::new("bonus"), "Bonus sector"));
 
-        install(&mut app);
+        assert_eq!(game.sector_count(), 9);
+        assert_eq!(game.sectors().last().unwrap().text(), "Bonus sector");
+    }
 
-        let table = app
-            .world()
-            .resource::<LootTableRegistry>()
-            .table(&LootTableId::new(HELLO_WORLD_LOOT_TABLE_ID))
-            .unwrap();
-
-        assert_eq!(table.outcomes().len(), 3);
-
-        let wheel = app
-            .world()
-            .resource::<WheelRegistry>()
-            .wheel(&WheelId::new(HELLO_WORLD_WHEEL_ID))
-            .unwrap();
-
-        assert_eq!(wheel.loot_table().as_str(), HELLO_WORLD_LOOT_TABLE_ID);
-
-        assert!(
-            app.world()
-                .resource::<GameModeRegistry>()
-                .mode(&GameModeId::new(CLASSIC_GAME_MODE_ID,))
-                .is_some()
+    #[test]
+    fn installed_wheel_has_eight_risk_and_reward_sectors() {
+        let game = WheelGame::new(17);
+        assert_eq!(game.sector_count(), 8);
+        assert_eq!(
+            game.wheel().loot_table().as_str(),
+            HELLO_WORLD_LOOT_TABLE_ID
         );
     }
 
     #[test]
-    fn spins_only_when_input_requests_it() {
+    fn salvage_advances_depth_and_deep_rooms_reinforce_hull() {
+        let mut run = Expedition::default();
+        run.resolve(&OutcomeId::new("salvage"));
+        assert_eq!(run.salvage, 1);
+        assert_eq!(run.depth, 2);
+        assert_eq!(run.hull, 3);
+
+        run.resolve(&OutcomeId::new("salvage"));
+        assert_eq!(run.depth, 3);
+        assert_eq!(run.max_hull, 4);
+        assert_eq!(run.hull, 4);
+    }
+
+    #[test]
+    fn deep_hazard_can_end_a_run() {
+        let mut run = Expedition {
+            depth: 4,
+            hull: 2,
+            ..Expedition::default()
+        };
+
+        run.resolve(&OutcomeId::new("hazard"));
+
+        assert!(run.finished);
+        assert_eq!(run.hull, 0);
+        assert_eq!(run.best_depth, 4);
+    }
+
+    #[test]
+    fn extraction_banks_salvage_and_restart_keeps_the_bank() {
+        let mut run = Expedition::default();
+        run.resolve(&OutcomeId::new("salvage"));
+        run.resolve(&OutcomeId::new("cache"));
+
+        run.extract();
+        assert_eq!(run.banked_salvage, 4);
+        assert!(run.finished);
+
+        run.restart();
+        assert_eq!(run.banked_salvage, 4);
+        assert_eq!(run.depth, 1);
+        assert_eq!(run.hull, STARTING_HULL);
+    }
+
+    #[test]
+    fn spin_requires_input_then_animates_before_resolving() {
         let mut app = terminal_engine::create_app();
-
-        install(&mut app);
-
+        install_with_seed(&mut app, 17);
         app.update();
-
-        assert!(app.world().resource::<SpinResult>().outcome().is_none());
+        assert!(!app.world().resource::<WheelGame>().is_spinning());
+        assert!(app.world().resource::<WheelGame>().result.is_none());
 
         app.world_mut()
             .resource_mut::<InputState>()
             .push_event(InputEvent::Key(KeyInput::plain(Key::Character(' '))));
-
         app.update();
-
-        assert_eq!(
-            app.world()
-                .resource::<SpinResult>()
-                .outcome()
-                .unwrap()
-                .text(),
-            "Hello from Vapor!"
-        );
-
         app.world_mut().resource_mut::<InputState>().clear();
+        assert!(app.world().resource::<WheelGame>().is_spinning());
+        assert!(app.world().resource::<WheelGame>().result.is_none());
 
-        app.update();
+        for _ in 0..SPIN_FRAME_COUNT {
+            app.update();
+        }
 
+        let game = app.world().resource::<WheelGame>();
+        assert!(!game.is_spinning());
+        assert!(game.result.is_some());
+        assert_eq!(game.run.depth, 2);
         assert_eq!(
-            app.world()
-                .resource::<SpinResult>()
-                .outcome()
-                .unwrap()
-                .text(),
-            "Hello from Vapor!"
+            game.preview_sector + 1,
+            (mix64(17) as usize % game.sector_count()) + 1
         );
+    }
+
+    #[test]
+    fn extraction_and_restart_controls_preserve_the_saved_haul() {
+        let mut app = terminal_engine::create_app();
+        install_with_seed(&mut app, 17);
+        app.world_mut()
+            .resource_mut::<WheelGame>()
+            .run
+            .resolve(&OutcomeId::new("salvage"));
+        app.world_mut()
+            .resource_mut::<InputState>()
+            .push_event(InputEvent::Key(KeyInput::plain(Key::Character('e'))));
+        app.update();
+        app.world_mut().resource_mut::<InputState>().clear();
+        assert!(app.world().resource::<WheelGame>().run.finished);
+        assert_eq!(app.world().resource::<WheelGame>().run.banked_salvage, 1);
 
         app.world_mut()
             .resource_mut::<InputState>()
-            .push_event(InputEvent::Key(KeyInput::plain(Key::Character(' '))));
-
+            .push_event(InputEvent::Key(KeyInput::plain(Key::Character('r'))));
         app.update();
-
-        assert_eq!(
-            app.world()
-                .resource::<SpinResult>()
-                .outcome()
-                .unwrap()
-                .text(),
-            "Hello again from Vapor!"
-        );
+        app.world_mut().resource_mut::<InputState>().clear();
+        let game = app.world().resource::<WheelGame>();
+        assert!(!game.run.finished);
+        assert_eq!(game.run.depth, 1);
+        assert_eq!(game.run.banked_salvage, 1);
     }
 }

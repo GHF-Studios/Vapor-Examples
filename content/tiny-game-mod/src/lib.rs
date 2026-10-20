@@ -1,59 +1,33 @@
-//! Tiny Game Mod used by Vapor's evolving Hello World on Steroids techdemo.
-//!
-//! The Mod now demonstrates three separate Game-owned extension mechanisms:
-//!
-//! - attaching a system to a Game-defined registration phase;
-//! - extending a Game-owned LootTable through ordinary Rust API;
-//! - registering and selecting an entirely new GameMode.
+//! A tiny mod that adds one sector to the composed wheel.
 
 use bevy_ecs::{prelude::ResMut, schedule::IntoScheduleConfigs};
-use hello_world_game::{
-    ActiveGameMode, App, GameModeDefinition, GameModeId, GameModeRegistry,
-    HELLO_WORLD_LOOT_TABLE_ID, HELLO_WORLD_WHEEL_ID, LootTableId, LootTableRegistry, OutcomeId,
-    SpinStrategy, Startup, WheelGameSet, WheelId, WheelOutcome,
-};
-
-const STEROIDS_MODE_ID: &str = "on-steroids";
+use hello_world_game::{App, OutcomeId, Startup, WheelGame, WheelGameSet, WheelOutcome};
 
 pub fn install(app: &mut App) {
-    app.add_systems(Startup, register_steroids.in_set(WheelGameSet::Register));
+    app.add_systems(Startup, add_bonus_sector.in_set(WheelGameSet::Register));
 }
 
-/// Game-Mod-owned selection behavior.
-///
-/// This demonstrates that downstream Content may implement the Game's public
-/// extension contract without Vapor knowing anything about that contract.
-struct LastOutcomeSpin;
-
-impl SpinStrategy for LastOutcomeSpin {
-    fn select(&self, outcomes: &[WheelOutcome], _spin_index: u64) -> Option<usize> {
-        outcomes.len().checked_sub(1)
-    }
-}
-
-fn register_steroids(
-    mut loot_tables: ResMut<LootTableRegistry>,
-    mut modes: ResMut<GameModeRegistry>,
-    mut active_mode: ResMut<ActiveGameMode>,
-) {
-    let table_id = LootTableId::new(HELLO_WORLD_LOOT_TABLE_ID);
-
-    let table = loot_tables
-        .table_mut(&table_id)
-        .expect("Hello World Game must register its base LootTable");
-
-    table.add_outcome(WheelOutcome::new(
+fn add_bonus_sector(mut game: ResMut<WheelGame>) {
+    game.add_outcome(WheelOutcome::new(
         OutcomeId::new("on-steroids"),
-        "Hello from Vapor! ...on steroids.",
+        "Mod sector: +2 salvage",
     ));
+}
 
-    let mode_id = GameModeId::new(STEROIDS_MODE_ID);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hello_world_game::{WheelGame, create_app, install as install_game};
 
-    modes.register(GameModeDefinition::new(
-        mode_id.clone(),
-        WheelId::new(HELLO_WORLD_WHEEL_ID),
-        LastOutcomeSpin,
-    ));
+    #[test]
+    fn composed_mod_adds_its_sector_during_registration() {
+        let mut app = create_app();
+        install_game(&mut app);
+        install(&mut app);
+        app.update();
 
-    active_mode.select(mode_id);
+        let game = app.world().resource::<WheelGame>();
+        assert_eq!(game.sector_count(), 9);
+        assert_eq!(game.sectors().last().unwrap().id().as_str(), "on-steroids");
+    }
 }

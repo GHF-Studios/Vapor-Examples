@@ -1,0 +1,14 @@
+schema = 1
+
+[crate]
+name = "wheel-core"
+version.workspace = true
+libraries = ["wheel_core"]
+
+[crate.steam]
+app-id = 2122620
+visibility = "private"
+title = "Wheel Core"
+description = "Shared data model for Vapor’s terminal wheel example."
+tags = ["vapor", "example", "crate"]
+change-note = "Initial private Vapor content lifecycle test."

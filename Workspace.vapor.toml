@@ -6,6 +6,12 @@ organization = "ghf-studios"
 version = "0.1.0"
 repository = "https://github.com/GHF-Studios/Vapor-Examples"
 
+[workspace.runtime]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-gnullvm",
+]
+
 [toolchain]
 channel = "stable"
 version = "1.97.0"
@@ -14,3 +20,20 @@ date = "2026-07-09"
 [[project]]
 name = "vapor-examples"
 path = "."
+[[workspace.projects]]
+path = "content/wheel-core"
+
+[[workspace.projects]]
+path = "content/wheel-rules"
+
+[[workspace.projects]]
+path = "content/terminal-engine"
+
+[[workspace.projects]]
+path = "content/hello-world-game"
+
+[[workspace.projects]]
+path = "content/tiny-game-mod"
+
+[[workspace.projects]]
+path = "content/hello-world-packagepack"
