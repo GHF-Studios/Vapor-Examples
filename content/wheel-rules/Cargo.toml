@@ -6,6 +6,7 @@ edition = "2024"
 [lib]
 name = "wheel_rules"
 path = "src/lib.rs"
+crate-type = ["rlib", "staticlib"]
 
 [dependencies]
 wheel_core = { version = "0.1.0", path = "../wheel-core", package = "vapor-example-wheel-core" }

@@ -7,6 +7,7 @@ binaries = ["vapor-example-terminal-engine"]
 
 [engine.steam]
 app-id = 2122620
+published-file-id = "3823733745"
 visibility = "private"
 title = "Terminal Engine"
 description = "Small terminal runtime used by the Vapor wheel example."

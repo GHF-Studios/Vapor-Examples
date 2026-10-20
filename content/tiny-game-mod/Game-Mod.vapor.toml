@@ -7,10 +7,12 @@ libraries = ["vapor-example-tiny-game-mod"]
 
 [[game-mod.dependencies]]
 id = "ghf-studios/vapor-examples/hello-world-game"
+workshop-id = "3823733921"
 version = "^0.1"
 
 [game-mod.steam]
 app-id = 2122620
+published-file-id = "3823734052"
 visibility = "private"
 title = "Wheel Booster Mod"
 description = "A tiny game mod that adds one bonus sector to the wheel."

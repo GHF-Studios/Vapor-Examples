@@ -3,7 +3,7 @@ schema = 1
 [workspace]
 name = "vapor-examples"
 organization = "ghf-studios"
-version = "0.1.0"
+version = "0.1.1"
 repository = "https://github.com/GHF-Studios/Vapor-Examples"
 
 [workspace.runtime]

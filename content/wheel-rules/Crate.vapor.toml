@@ -7,10 +7,12 @@ libraries = ["wheel_rules"]
 
 [[crate.dependencies]]
 id = "ghf-studios/vapor-examples/wheel-core"
+workshop-id = "3823733452"
 version = "^0.1"
 
 [crate.steam]
 app-id = 2122620
+published-file-id = "3823733589"
 visibility = "private"
 title = "Wheel Rules"
 description = "Wheel and loot-table rules for Vapor’s terminal wheel example."
