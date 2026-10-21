@@ -9,5 +9,7 @@ A tiny Game Mod adds a ninth bonus sector. Wheel rules and data are separate
 Crates; the Engine owns terminal input and rendering.
 
 The playable `hello-world-packagepack` is a non-default composition. Its
-Workshop metadata is private and exists for testing Vapor's content lifecycle.
-It is example content, not first-party Loo-Cast product content.
+executable is a Packagepack-owned composition entrypoint: it installs the
+selected Game and Mod into the selected Engine before the Engine begins its
+loop. Its Workshop metadata is private and exists for testing Vapor's content
+lifecycle. It is example content, not first-party Loo-Cast product content.

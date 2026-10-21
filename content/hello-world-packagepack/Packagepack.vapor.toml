@@ -3,7 +3,7 @@ schema = 1
 [packagepack]
 name = "hello-world-packagepack"
 version.workspace = true
-binaries = ["vapor-example-terminal-engine"]
+binaries = ["vapor-example-wheel-salvage"]
 
 [packagepack.engine]
 id = "ghf-studios/vapor-examples/terminal-engine"

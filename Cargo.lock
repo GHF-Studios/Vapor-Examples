@@ -1057,6 +1057,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "vapor-example-wheel-salvage"
+version = "0.1.0"
+dependencies = [
+ "bevy_ecs",
+ "vapor-example-hello-world-game",
+ "vapor-example-terminal-engine",
+ "vapor-example-tiny-game-mod",
+]
+
+[[package]]
 name = "vapor-example-hello-world-game"
 version = "0.1.0"
 dependencies = [

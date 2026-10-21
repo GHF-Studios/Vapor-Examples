@@ -4,6 +4,7 @@ schema = 1
 name = "terminal-engine"
 version.workspace = true
 binaries = ["vapor-example-terminal-engine"]
+presentation = "terminal"
 
 [engine.steam]
 app-id = 2122620

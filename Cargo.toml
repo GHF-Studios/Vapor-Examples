@@ -6,6 +6,7 @@ members = [
     "content/tiny-game-mod",
     "content/wheel-core",
     "content/wheel-rules",
+    "content/hello-world-packagepack",
 ]
 
 [profile.dev]

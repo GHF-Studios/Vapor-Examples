@@ -1,0 +1,17 @@
+[package]
+name = "vapor-example-wheel-salvage"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy_ecs = "0.19.1"
+hello_world_game = { version = "=0.1.0", path = "../hello-world-game", package = "vapor-example-hello-world-game" }
+terminal_engine = { version = "=0.1.0", path = "../terminal-engine", package = "vapor-example-terminal-engine" }
+tiny_game_mod = { version = "=0.1.0", path = "../tiny-game-mod", package = "vapor-example-tiny-game-mod" }
+
+[[bin]]
+name = "vapor-example-wheel-salvage"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
