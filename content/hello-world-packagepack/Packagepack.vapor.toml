@@ -8,23 +8,23 @@ binaries = ["vapor-example-wheel-salvage"]
 [packagepack.engine]
 id = "ghf-studios/vapor-examples/terminal-engine"
 workshop-id = "3823733745"
-version = "^0.1"
+version = "^0.5"
 
 [packagepack.game]
 id = "ghf-studios/vapor-examples/hello-world-game"
 workshop-id = "3823733921"
-version = "^0.1"
+version = "^0.5"
 
 [[packagepack.dependencies]]
 id = "ghf-studios/vapor-examples/tiny-game-mod"
 workshop-id = "3823734052"
-version = "^0.1"
+version = "^0.5"
 
 [packagepack.steam]
 app-id = 2122620
 published-file-id = "3823734148"
-visibility = "private"
+visibility = "public"
 title = "Wheel Salvage Demo"
 description = "A playable non-default Vapor composition featuring the terminal wheel roguelike."
 tags = ["vapor", "example", "packagepack"]
-change-note = "Initial private Vapor content lifecycle test."
+change-note = "Publish public Vapor content lifecycle example."

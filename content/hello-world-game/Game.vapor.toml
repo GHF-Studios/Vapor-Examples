@@ -8,18 +8,18 @@ libraries = ["vapor-example-hello-world-game"]
 [game.engine]
 id = "ghf-studios/vapor-examples/terminal-engine"
 workshop-id = "3823733745"
-version = "^0.1"
+version = "^0.5"
 
 [[game.dependencies]]
 id = "ghf-studios/vapor-examples/wheel-rules"
 workshop-id = "3823733589"
-version = "^0.1"
+version = "^0.5"
 
 [game.steam]
 app-id = 2122620
 published-file-id = "3823733921"
-visibility = "private"
+visibility = "public"
 title = "Wheel Salvage"
 description = "A small risk-and-reward wheel roguelike for the Vapor terminal runtime."
 tags = ["vapor", "example", "game"]
-change-note = "Initial private Vapor content lifecycle test."
+change-note = "Publish public Vapor content lifecycle example."

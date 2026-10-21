@@ -9,8 +9,8 @@ presentation = "terminal"
 [engine.steam]
 app-id = 2122620
 published-file-id = "3823733745"
-visibility = "private"
+visibility = "public"
 title = "Terminal Engine"
 description = "Small terminal runtime used by the Vapor wheel example."
 tags = ["vapor", "example", "engine"]
-change-note = "Initial private Vapor content lifecycle test."
+change-note = "Publish public Vapor content lifecycle example."

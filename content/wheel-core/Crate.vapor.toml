@@ -8,8 +8,8 @@ libraries = ["wheel_core"]
 [crate.steam]
 app-id = 2122620
 published-file-id = "3823733452"
-visibility = "private"
+visibility = "public"
 title = "Wheel Core"
 description = "Shared data model for Vapor’s terminal wheel example."
 tags = ["vapor", "example", "crate"]
-change-note = "Initial private Vapor content lifecycle test."
+change-note = "Publish public Vapor content lifecycle example."
