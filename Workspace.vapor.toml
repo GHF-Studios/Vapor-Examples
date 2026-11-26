@@ -37,3 +37,8 @@ path = "content/tiny-game-mod"
 
 [[workspace.projects]]
 path = "content/hello-world-packagepack"
+
+[[run]]
+name = "wheel-salvage"
+package = "vapor-example-wheel-salvage"
+profile = "dev"
